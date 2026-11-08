@@ -36,11 +36,11 @@ $router->get('/scores', [
 $router->get('users', 'UsersController@index');
 $router->get('users/{userId}', 'UsersController@show');
 
-$router->get('posts', 'PostsController@index');
-$router->get('posts/{id}', 'PostsController@show');
-$router->post('posts', 'PostsController@store');
-$router->put('posts/{id}', 'PostsController@update');
-$router->delete('posts/{id}', 'PostsController@destroy');
+$router->get('/posts', 'PostsController@index');
+$router->get('/post/{postId}', 'PostsController@show');
+$router->post('/posts', 'PostsController@store');
+$router->put('/post/{postId}', 'PostsController@update');
+$router->delete('/post/{postId}', 'PostsController@destroy');
 
 $router->get('/products', 'ProductsController@index');
 $router->post('/products', 'ProductsController@store');
