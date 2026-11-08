@@ -7,21 +7,40 @@ use Illuminate\Http\Request;
 
 class PostsController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Post::all(), 200);
+        $posts = Post::OrderBy("id", "DESC")->paginate(2)->toArray();
+        $response = [
+            "total_count" => $posts["total"],
+            "limit" => $posts["per_page"],
+            "pagination" => [
+                "next_page" => $posts["next_page_url"],
+                "current_page" => $posts["current_page"]
+            ],
+            "data" => $posts["data"],
+        ];
+
+        return response()->json($response, 200);
     }
 
     public function store(Request $request)
     {
-        $this->validate($request, [
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-        ]);
+        $input = $request->all();
+        $validationRules = [
+            'title' => 'required|min:5',
+            'content' => 'required|min:10',
+            'status' => 'required|in:draft,published',
+            'user_id' => 'required|exists:users,id'
+        ];
 
-        $post = Post::create($request->only(['title', 'content']));
+        $validator = \Validator::make($input, $validationRules);
 
-        return response()->json($post, 201);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $post = Post::create($input);
+        return response()->json($post, 200);
     }
 
     public function show($postId)
@@ -29,7 +48,7 @@ class PostsController extends Controller
         $post = Post::find($postId);
 
         if (!$post) {
-            return response()->json(['message' => 'Post not found'], 404);
+            abort(404);
         }
 
         return response()->json($post, 200);
@@ -37,18 +56,31 @@ class PostsController extends Controller
 
     public function update(Request $request, $postId)
     {
+        $input = $request->all();
+
         $post = Post::find($postId);
 
         if (!$post) {
-            return response()->json(['message' => 'Post not found'], 404);
+            abort(404);
         }
 
-        $this->validate($request, [
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-        ]);
+        // validation
+        $validationRules = [
+            'title' => 'required|min:5',
+            'content' => 'required|min:10',
+            'status' => 'required|in:draft,published',
+            'user_id' => 'required|exists:users,id'
+        ];
 
-        $post->update($request->only(['title', 'content']));
+        $validator = \Validator::make($input, $validationRules);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+        // validation end
+
+        $post->fill($input);
+        $post->save();
 
         return response()->json($post, 200);
     }
@@ -58,7 +90,7 @@ class PostsController extends Controller
         $post = Post::find($postId);
 
         if (!$post) {
-            return response()->json(['message' => 'Post not found'], 404);
+            abort(404);
         }
 
         $post->delete();
