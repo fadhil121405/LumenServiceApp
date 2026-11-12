@@ -36,14 +36,27 @@ $router->get('/scores', [
 $router->get('users', 'UsersController@index');
 $router->get('users/{userId}', 'UsersController@show');
 
-$router->get('/posts', 'PostsController@index');
-$router->get('/post/{postId}', 'PostsController@show');
-$router->post('/posts', 'PostsController@store');
-$router->put('/post/{postId}', 'PostsController@update');
-$router->delete('/post/{postId}', 'PostsController@destroy');
+$router->group(['prefix' => 'auth'], function () use ($router) {
+    $router->post('/register', 'AuthController@register');
+    $router->post('/login', 'AuthController@login');
+});
 
-$router->get('/products', 'ProductsController@index');
-$router->post('/products', 'ProductsController@store');
-$router->get('/product/{productId}', 'ProductsController@show');
-$router->put('/product/{productId}', 'ProductsController@update');
-$router->delete('/product/{productId}', 'ProductsController@destroy');
+$router->group(['middleware' => 'auth'], function () use ($router) {
+    $router->get('/posts', 'PostsController@index');
+    $router->post('/posts', 'PostsController@store');
+    $router->get('/post/{id}', 'PostsController@show');
+    $router->put('/post/{id}', 'PostsController@update');
+    $router->delete('/post/{id}', 'PostsController@destroy');
+});
+
+$router->group(['middleware' => 'auth'], function () use ($router) {
+    $router->get('/products', 'ProductsController@index');
+    $router->post('/products', 'ProductsController@store');
+    $router->get('/products/{productId}', 'ProductsController@show');
+    $router->put('/products/{productId}', 'ProductsController@update');
+    $router->delete('/products/{productId}', 'ProductsController@destroy');
+});
+
+$router->group(['middleware' => 'auth'], function () use ($router) {
+    $router->delete('/auth/logout', 'AuthController@logout');
+});
